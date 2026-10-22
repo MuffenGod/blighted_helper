@@ -1,0 +1,335 @@
+{
+  "aspect": 0.8333,
+  "layers": [
+    {
+      "id": "tail",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/tail.png",
+      "z": -0.1,
+      "pivot": [
+        0.52,
+        0.52
+      ],
+      "flap": {
+        "deg": 2.6,
+        "hz": 0.34,
+        "phase": 0.6
+      }
+    },
+    {
+      "id": "wing_l",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/wing_l.png",
+      "z": -0.07,
+      "pivot": [
+        0.39,
+        0.25
+      ],
+      "flap": {
+        "deg": 4.5,
+        "hz": 0.42,
+        "phase": 0.0
+      }
+    },
+    {
+      "id": "wing_r",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/wing_r.png",
+      "z": -0.07,
+      "pivot": [
+        0.61,
+        0.25
+      ],
+      "flap": {
+        "deg": -4.5,
+        "hz": 0.42,
+        "phase": 0.3
+      }
+    },
+    {
+      "id": "body",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/body.png",
+      "z": 0.0,
+      "breathe": 0.004
+    },
+    {
+      "id": "glow",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/glow.png",
+      "z": 0.004,
+      "breathe": 0.004,
+      "emissive": true
+    },
+    {
+      "id": "hair",
+      "texture": "blighted_enhancements:textures/entity/emily_standee/front/hair.png",
+      "z": 0.012,
+      "pivot": [
+        0.5,
+        0.08
+      ],
+      "flap": {
+        "deg": 1.1,
+        "hz": 0.28,
+        "phase": 0.2
+      }
+    }
+  ],
+  "views": {
+    "front": [
+      {
+        "id": "tail",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/tail.png",
+        "z": -0.1,
+        "pivot": [
+          0.52,
+          0.52
+        ],
+        "flap": {
+          "deg": 2.6,
+          "hz": 0.34,
+          "phase": 0.6
+        }
+      },
+      {
+        "id": "wing_l",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/wing_l.png",
+        "z": -0.07,
+        "pivot": [
+          0.39,
+          0.25
+        ],
+        "flap": {
+          "deg": 4.5,
+          "hz": 0.42,
+          "phase": 0.0
+        }
+      },
+      {
+        "id": "wing_r",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/wing_r.png",
+        "z": -0.07,
+        "pivot": [
+          0.61,
+          0.25
+        ],
+        "flap": {
+          "deg": -4.5,
+          "hz": 0.42,
+          "phase": 0.3
+        }
+      },
+      {
+        "id": "body",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/body.png",
+        "z": 0.0,
+        "breathe": 0.004
+      },
+      {
+        "id": "glow",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/glow.png",
+        "z": 0.004,
+        "breathe": 0.004,
+        "emissive": true
+      },
+      {
+        "id": "hair",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/front/hair.png",
+        "z": 0.012,
+        "pivot": [
+          0.5,
+          0.08
+        ],
+        "flap": {
+          "deg": 1.1,
+          "hz": 0.28,
+          "phase": 0.2
+        }
+      }
+    ],
+    "left": [
+      {
+        "id": "tail",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/left/tail.png",
+        "z": -0.05,
+        "pivot": [
+          0.53,
+          0.44
+        ],
+        "flap": {
+          "deg": 3.0,
+          "hz": 0.35,
+          "phase": 0.0
+        }
+      },
+      {
+        "id": "body",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/left/body.png",
+        "z": 0.0,
+        "breathe": 0.004
+      },
+      {
+        "id": "hair",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/left/hair.png",
+        "z": 0.012,
+        "pivot": [
+          0.5,
+          0.08
+        ],
+        "flap": {
+          "deg": 1.4,
+          "hz": 0.28,
+          "phase": 0.1
+        }
+      },
+      {
+        "id": "horns",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/left/horns.png",
+        "z": 0.018
+      }
+    ],
+    "right": [
+      {
+        "id": "tail",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/right/tail.png",
+        "z": -0.05,
+        "pivot": [
+          0.47,
+          0.44
+        ],
+        "flap": {
+          "deg": -3.0,
+          "hz": 0.35,
+          "phase": 0.0
+        }
+      },
+      {
+        "id": "body",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/right/body.png",
+        "z": 0.0,
+        "breathe": 0.004
+      },
+      {
+        "id": "hair",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/right/hair.png",
+        "z": 0.012,
+        "pivot": [
+          0.5,
+          0.08
+        ],
+        "flap": {
+          "deg": -1.4,
+          "hz": 0.28,
+          "phase": 0.1
+        }
+      },
+      {
+        "id": "horns",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/right/horns.png",
+        "z": 0.018
+      }
+    ],
+    "back": [
+      {
+        "id": "body_dress",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/back/body_dress.png",
+        "z": 0.0,
+        "breathe": 0.003
+      },
+      {
+        "id": "wing_l",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/back/wing_l.png",
+        "z": 0.05,
+        "pivot": [
+          0.41,
+          0.26
+        ],
+        "flap": {
+          "deg": 4.5,
+          "hz": 0.42,
+          "phase": 0.0
+        }
+      },
+      {
+        "id": "wing_r",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/back/wing_r.png",
+        "z": 0.05,
+        "pivot": [
+          0.59,
+          0.26
+        ],
+        "flap": {
+          "deg": -4.5,
+          "hz": 0.42,
+          "phase": 0.3
+        }
+      },
+      {
+        "id": "hair",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/back/hair.png",
+        "z": 0.07,
+        "pivot": [
+          0.5,
+          0.08
+        ],
+        "flap": {
+          "deg": 1.2,
+          "hz": 0.28,
+          "phase": 0.2
+        }
+      },
+      {
+        "id": "tail",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/back/tail.png",
+        "z": 0.09,
+        "pivot": [
+          0.5,
+          0.46
+        ],
+        "flap": {
+          "deg": 2.4,
+          "hz": 0.34,
+          "phase": 0.5
+        }
+      }
+    ],
+    "rear": [
+      {
+        "id": "body_dress",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/rear/body_dress.png",
+        "z": 0.0,
+        "breathe": 0.003
+      },
+      {
+        "id": "wings_folded",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/rear/wings_folded.png",
+        "z": 0.04,
+        "breathe": 0.005
+      },
+      {
+        "id": "hair",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/rear/hair.png",
+        "z": 0.06,
+        "pivot": [
+          0.5,
+          0.08
+        ],
+        "flap": {
+          "deg": 1.1,
+          "hz": 0.28,
+          "phase": 0.2
+        }
+      },
+      {
+        "id": "tail",
+        "texture": "blighted_enhancements:textures/entity/emily_standee/rear/tail.png",
+        "z": 0.08,
+        "pivot": [
+          0.5,
+          0.46
+        ],
+        "flap": {
+          "deg": 2.0,
+          "hz": 0.34,
+          "phase": 0.5
+        }
+      }
+    ]
+  }
+}

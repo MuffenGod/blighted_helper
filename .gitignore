@@ -1,0 +1,27 @@
+# Gradle / NeoForge build output
+blighted_helper/.gradle/
+blighted_helper/build/
+blighted_helper/run/
+blighted_helper/logs/
+.gradle/
+build/
+
+# Java / IDE
+*.class
+.idea/
+*.iml
+out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Blender autosave/backup
+*.blend1
+*.blend2

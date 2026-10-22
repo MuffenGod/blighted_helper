@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model Studio</title>
+<style>
+  :root { --bg:#14121c; --panel:#1d1a2a; --line:#363148; --text:#e9e6f5; --dim:#9a94b4; --accent:#b08cf0; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#eceaf4; --panel:#fff; --line:#cfc9e0; --text:#1d1a2a; --dim:#6a6485; --accent:#6d40c4; } }
+  :root[data-theme="light"] { --bg:#eceaf4; --panel:#fff; --line:#cfc9e0; --text:#1d1a2a; --dim:#6a6485; --accent:#6d40c4; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; }
+  #app { display:grid; grid-template-columns: 1fr 320px; height:100vh; }
+  #view { position:relative; min-width:0; min-height:0; overflow:hidden; }
+  canvas { position:absolute; inset:0; display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+  #bar { position:absolute; left:12px; top:12px; display:flex; flex-wrap:wrap; gap:6px; max-width:calc(100% - 24px); }
+  button, select { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px; font:inherit; cursor:pointer; }
+  button:hover, select:hover { border-color:var(--accent); }
+  button.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 22%, var(--panel)); }
+  #side { background:var(--panel); border-left:1px solid var(--line); overflow:auto; padding:12px; }
+  h3 { margin:12px 0 6px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .row { display:grid; grid-template-columns: 74px 1fr 46px; gap:6px; align-items:center; margin:2px 0; }
+  .row label { color:var(--dim); font-size:12px; }
+  .row input[type=range] { width:100%; }
+  .row output { font-variant-numeric: tabular-nums; font-size:12px; text-align:right; color:var(--dim); }
+  #parts { max-height:200px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+  #parts div { padding:3px 8px; cursor:pointer; font-size:13px; }
+  #parts div:hover { background:color-mix(in srgb, var(--accent) 14%, transparent); }
+  #parts div.sel { background:color-mix(in srgb, var(--accent) 30%, transparent); }
+  textarea { width:100%; height:90px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; font:11px ui-monospace, monospace; }
+  #hint { position:absolute; left:12px; bottom:10px; color:var(--dim); font-size:12px; }
+  body.clean #side, body.clean #bar, body.clean #hint { display:none; } body.clean #app { grid-template-columns: 1fr; }
+  body.viewer #side { display:none; } body.viewer #app { grid-template-columns: 1fr; } body.viewer #bar { gap:6px 6px; } body.viewer .grp { display:flex; flex-wrap:wrap; gap:6px; width:100%; align-items:center; } body.viewer .grp > span { color:var(--dim); font-size:11px; letter-spacing:.08em; text-transform:uppercase; min-width:64px; }
+  @media (max-width: 760px) { #app { grid-template-columns: 1fr; grid-template-rows: 62vh 1fr; } #side { border-left:0; border-top:1px solid var(--line); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="view">
+    <canvas id="c"></canvas>
+    <div id="bar"></div>
+    <div id="hint">drag = orbit · wheel = zoom · right-drag = pan</div>
+  </div>
+  <div id="side">
+    <h3>Variant</h3>
+    <select id="variant"></select>
+    <h3>Part (extra parts of this variant)</h3>
+    <div id="parts"></div>
+    <div id="sliders"></div>
+    <h3>Export</h3>
+    <button id="exp">Copy this variant's parts JSON</button>
+    <textarea id="out" readonly></textarea>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const DATA = /*DATA*/null;
+const VARIANTS = Object.keys(DATA.textures);
+const base = DATA.base.parts, extra = DATA.parts.parts, hide = DATA.parts.hide, tweak = DATA.parts.tweak || {};
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, preserveDrawingBuffer:true });
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 1, 2000);
+scene.add(new THREE.AmbientLight(0xffffff, 0.78));
+const key = new THREE.DirectionalLight(0xffffff, 0.55); key.position.set(-40, -60, -80); scene.add(key);
+const root = new THREE.Group(); root.scale.set(-1, -1, 1); scene.add(root);   // model space is y-down, x mirrored (as in the game)
+const floor = new THREE.Mesh(new THREE.CircleGeometry(26, 48), new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.18 }));
+floor.rotation.x = -Math.PI/2; floor.position.y = -24.2; scene.add(floor);
+
+const VERT = `varying vec2 vUv; varying float vLight;
+void main(){ vUv = uv; vec3 n = normalize(mat3(modelMatrix) * normal);
+  float l0 = max(0.0, dot(normalize(vec3(-0.2, 1.0, -0.7)), n)), l1 = max(0.0, dot(normalize(vec3(0.2, 1.0, 0.7)), n));
+  vLight = min(1.0, (l0 + l1) * 0.6 + 0.4);
+  gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); }`;
+const FRAG = `uniform sampler2D map; uniform float glow; varying vec2 vUv; varying float vLight;
+void main(){ vec4 c = texture2D(map, vUv); if (c.a < 0.5) discard; gl_FragColor = vec4(c.rgb * vLight, 1.0); }`;
+const FRAG_GLOW = `uniform sampler2D map; uniform float glow; varying vec2 vUv; varying float vLight;
+void main(){ vec4 c = texture2D(map, vUv); if (c.a < 0.1) discard; gl_FragColor = vec4(c.rgb * glow, 1.0); }`;
+const texCache = {};
+function loadTex(v, glow) {
+  const key = v + (glow ? ":g" : "");
+  if (texCache[key]) return texCache[key];
+  const t = new THREE.TextureLoader().load(glow ? DATA.glows[v] : DATA.textures[v], (tx) => { if (!glow) { TEXW = tx.image.width; TEXH = tx.image.height; build(current); } });
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.flipY = false;
+  return (texCache[key] = t);
+}
+
+// exact port of net.minecraft.client.model.geom.ModelPart.Cube
+let TEXW = 256, TEXH = 128;
+function cubeGeometry(c, TW = TEXW, TH = TEXH) {
+  let [x, y, z, w, h, d] = c.box; const inf = c.inflate || 0;
+  let x2 = x + w + inf, y2 = y + h + inf, z2 = z + d + inf; x -= inf; y -= inf; z -= inf;
+  if (c.mirror) { const t = x; x = x2; x2 = t; }
+  const V = [[x,y,z],[x2,y,z],[x2,y2,z],[x,y2,z],[x,y,z2],[x2,y,z2],[x2,y2,z2],[x,y2,z2]];
+  const [u, v] = c.uv;
+  const j=u, k=u+d, l=u+d+w, m=u+d+w+d, n=u+d+w+w, o=u+d+w+d+w, p=v, q=v+d, r=v+d+h;
+  const P = [ [[5,4,0,1],k,p,l,q], [[2,3,7,6],l,q,n,p], [[0,4,7,3],j,q,k,r], [[1,0,3,2],k,q,l,r], [[5,1,2,6],l,q,m,r], [[4,5,6,7],m,q,o,r] ];
+  const pos = [], uvs = [], idx = []; let b = 0;
+  for (const [vi, u1, v1, u2, v2] of P) {
+    const T = [[u2,v1],[u1,v1],[u1,v2],[u2,v2]];
+    for (let i = 0; i < 4; i++) { pos.push(...V[vi[i]]); uvs.push(T[i][0]/TW, T[i][1]/TH); }
+    idx.push(b, b+1, b+2, b, b+2, b+3); b += 4;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+
+let glowMat = null;
+let nodes = {}, current = VARIANTS[0], selected = null, wire = false, glowOn = true;
+function build(variantName) {
+  while (root.children.length) root.remove(root.children[0]);
+  nodes = {};
+  const tex = loadTex(variantName);
+  const mat = new THREE.ShaderMaterial({ uniforms:{ map:{ value:tex }, glow:{ value:1 } }, vertexShader:VERT, fragmentShader:FRAG, side:THREE.DoubleSide, wireframe:wire });
+  glowMat = new THREE.ShaderMaterial({ uniforms:{ map:{ value:loadTex(variantName, true) }, glow:{ value:1 } }, vertexShader:VERT, fragmentShader:FRAG_GLOW, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1 });
+  const all = base.map(p => ({ ...p, extra:false })).concat(extra.filter(p => p.variants.includes(variantName)).map(p => ({ ...p, extra:true })));
+  for (const p of all) {
+    const g = new THREE.Group(); g.name = p.name; g.userData = p;
+    g.position.set(...p.pivot); g.rotation.set(p.rot[0], p.rot[1], p.rot[2], 'ZYX'); if (p.scale) g.scale.set(...p.scale);
+    for (const c of p.cubes) { const geo = cubeGeometry(c); g.add(new THREE.Mesh(geo, mat)); if (glowOn) { const gm = new THREE.Mesh(geo, glowMat); gm.userData.glow = true; g.add(gm); } }
+    nodes[p.name] = g;
+  }
+  for (const p of all) (p.parent ? nodes[p.parent] : root).add(nodes[p.name]);
+  // the Gaia model's own bits this variant replaces, and per-variant proportions
+  for (const n of (hide[variantName] || [])) if (nodes[n]) nodes[n].visible = false;
+  for (const n of ['headeyes', 'x_headeyes']) if (nodes[n]) nodes[n].visible = false;   // the blink overlay (closed eyes) is only shown while blinking
+  for (const [n, s] of Object.entries(tweak[variantName] || {})) if (nodes[n]) nodes[n].scale.set(...s);
+  if (variantName !== 'gaia') for (const n of ['halo']) if (nodes[n]) nodes[n].visible = false;
+  // parts that copy a standard part's pose (wings)
+  for (const p of all) if (p.follow && nodes[p.follow]) { const f = nodes[p.follow]; nodes[p.name].position.copy(f.position); nodes[p.name].rotation.copy(f.rotation); }
+  for (const pre of (window.__hide || [])) for (const n of Object.keys(nodes)) if (n.startsWith(pre)) nodes[n].visible = false;
+  root.position.y = 0;
+  renderParts();
+}
+
+// ---------- orbit camera
+const cam = { yaw: 2.6, pitch: 0.12, dist: 120, tx: 0, ty: -8 };
+function place() {
+  camera.position.set(cam.tx + cam.dist*Math.sin(cam.yaw)*Math.cos(cam.pitch), cam.ty + cam.dist*Math.sin(cam.pitch), cam.dist*Math.cos(cam.yaw)*Math.cos(cam.pitch));
+  camera.lookAt(cam.tx, cam.ty, 0);
+}
+let drag = null;
+canvas.addEventListener('pointerdown', e => { drag = { x:e.clientX, y:e.clientY, pan: e.button === 2 || e.shiftKey }; canvas.setPointerCapture(e.pointerId); canvas.style.cursor='grabbing'; });
+canvas.addEventListener('pointerup', () => { drag = null; canvas.style.cursor='grab'; });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.pan) { cam.ty += dy * 0.12; cam.tx -= dx * 0.12 * Math.cos(cam.yaw); }
+  else { cam.yaw -= dx * 0.008; cam.pitch = Math.max(-1.4, Math.min(1.4, cam.pitch + dy * 0.006)); }
+});
+canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = Math.max(25, Math.min(400, cam.dist * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive:false });
+
+// ---------- UI
+const bar = document.getElementById('bar');
+function btn(label, fn, id) { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { fn(b); }; if (id) b.id = id; bar.appendChild(b); return b; }
+const views = { Front:[Math.PI,0.1], '3/4':[2.6,0.12], Side:[Math.PI/2,0.05], Back:[0,0.1], 'Back 3/4':[0.55,0.12] };
+for (const [n, [y, p]] of Object.entries(views)) btn(n, () => { cam.yaw = y; cam.pitch = p; });
+btn('Face', () => { cam.dist = 40; cam.ty = -23; }); btn('Body', () => { cam.dist = 120; cam.ty = -8; cam.tx = 0; });
+btn('Glow', b => { glowOn = !glowOn; b.classList.toggle('on', glowOn); build(current); }).classList.add('on');
+  btn('Wireframe', b => { wire = !wire; b.classList.toggle('on', wire); build(current); });
+const sel = document.getElementById('variant');
+for (const v of VARIANTS) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); }
+sel.onchange = () => { current = sel.value; selected = null; build(current); };
+
+const partsEl = document.getElementById('parts'), slidersEl = document.getElementById('sliders'), outEl = document.getElementById('out');
+function renderParts() {
+  partsEl.innerHTML = '';
+  for (const p of extra.filter(p => p.variants.includes(current))) {
+    const d = document.createElement('div'); d.textContent = p.name; if (selected === p.name) d.className = 'sel';
+    d.onclick = () => { selected = p.name; renderParts(); renderSliders(); };
+    partsEl.appendChild(d);
+  }
+  renderSliders(); updateOut();
+}
+function slider(label, get, set, min, max, step) {
+  const r = document.createElement('div'); r.className = 'row';
+  const l = document.createElement('label'); l.textContent = label;
+  const i = document.createElement('input'); i.type = 'range'; i.min = min; i.max = max; i.step = step; i.value = get();
+  const o = document.createElement('output'); o.textContent = (+i.value).toFixed(2);
+  i.oninput = () => { set(+i.value); o.textContent = (+i.value).toFixed(2); updateOut(); };
+  r.append(l, i, o); slidersEl.appendChild(r);
+}
+function renderSliders() {
+  slidersEl.innerHTML = '';
+  const p = extra.find(q => q.name === selected && q.variants.includes(current)); if (!p) return;
+  const n = nodes[p.name];
+  const sync = () => { n.position.set(...p.pivot); n.rotation.set(p.rot[0], p.rot[1], p.rot[2], 'ZYX'); };
+  ['x','y','z'].forEach((a, i) => slider('pivot ' + a, () => p.pivot[i], v => { p.pivot[i] = v; sync(); }, -16, 16, 0.1));
+  ['x','y','z'].forEach((a, i) => slider('rot ' + a, () => p.rot[i], v => { p.rot[i] = v; sync(); }, -3.2, 3.2, 0.01));
+  p.cubes.forEach((c, ci) => {
+    ['w','h','d'].forEach((a, i) => slider('cube' + ci + ' ' + a, () => c.box[3 + i], v => {
+      c.box[3 + i] = v; const ng = cubeGeometry(c); n.children.filter(k => k.isMesh)[glowOn ? ci * 2 : ci].geometry = ng; if (glowOn) n.children.filter(k => k.isMesh)[ci * 2 + 1].geometry = ng;
+    }, 0, 16, 1));
+  });
+}
+function updateOut() { outEl.value = JSON.stringify(extra.filter(p => p.variants.includes(current))); }
+document.getElementById('exp').onclick = () => { outEl.select(); try { document.execCommand('copy'); } catch (e) {} };
+
+function resize() { const r = canvas.parentElement.getBoundingClientRect(); renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+const q = new URLSearchParams(location.search);
+if (q.get('v') && VARIANTS.includes(q.get('v'))) { current = q.get('v'); sel.value = current; }
+if (q.get('hide')) window.__hide = q.get('hide').split(',');
+if (q.get('yaw')) cam.yaw = +q.get('yaw'); if (q.get('pitch')) cam.pitch = +q.get('pitch');
+if (q.get('dist')) cam.dist = +q.get('dist'); if (q.get('ty')) cam.ty = +q.get('ty');
+build(current); resize();
+renderer.setClearColor(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#14121c');
+(function loop() { if (window.__orbit && !drag) cam.yaw -= 0.004; place(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+if (q.get('clean')) document.body.classList.add('clean');
+// render at an exact size and return a PNG data URL; with a name it POSTs the PNG to the studio server (design/entitykit/out/shots/<name>.png)
+function shot(w, h, name) {
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); place(); renderer.render(scene, camera);
+  const url = renderer.domElement.toDataURL('image/png'); resize();
+  if (name) return fetch('/save/' + name, { method:'POST', body:url }).then(r => r.text());
+  return url;
+}
+// contact sheet: views = [{v, yaw, pitch, dist, tx, ty, t (anim time)}...] drawn in a grid of cw x ch cells, saved as one PNG
+async function sheet(name, views, cw, ch, cols) {
+  cols = cols || views.length; const rows = Math.ceil(views.length / cols);
+  const sc = document.createElement('canvas'); sc.width = cw * cols; sc.height = ch * rows; const g = sc.getContext('2d');
+  for (let i = 0; i < views.length; i++) {
+    const vw = views[i];
+    if (vw.v && vw.v !== current) { current = vw.v; sel.value = vw.v; build(vw.v); await new Promise(r => setTimeout(r, 450)); }
+    if (window.__anim && vw.anim !== undefined) window.__anim.set(vw.anim, vw.t || 0);
+    Object.assign(cam, { yaw: vw.yaw ?? 2.75, pitch: vw.pitch ?? 0.08, dist: vw.dist ?? 92, tx: vw.tx ?? 0, ty: vw.ty ?? -9 });
+    const url = shot(cw, ch);
+    const img = new Image(); img.src = url; await img.decode();
+    g.drawImage(img, (i % cols) * cw, Math.floor(i / cols) * ch);
+  }
+  return fetch('/save/' + name, { method:'POST', body: sc.toDataURL('image/png') }).then(r => r.text());
+}
+// film strip: n frames of an animation mode (flourish progress 0..1, or ticks for idle/walk/run), one variant, one camera
+async function film(name, v, mode, times, view, cw, ch, cols) { return sheet(name, times.map((t) => ({ v, anim: mode, t, ...view })), cw || 300, ch || 420, cols || times.length); }
+window.__studio = { cam, build, shot, sheet, film, hide:(list)=>{ window.__hide = list; build(current); }, setVariant:(v)=>{ current=v; sel.value=v; build(v); } };
+</script>
+<script>/*MOTION_CORE*/</script>
+<script>/*BODY_CORE*/</script>
+<script>window.__MOTION = /*MOTION_DATA*/null;</script>
+<script>window.__SWINGS = /*SWINGS*/null;</script>
+<script>/*PLAYER*/</script>
+<script>
+// animation controls
+(function(){
+  const bar = document.getElementById('bar'); const mk = (l, f) => { const b = document.createElement('button'); b.textContent = l; b.onclick = () => f(b); bar.appendChild(b); return b; };
+  const selOf = (list, f) => { const s = document.createElement('select'); list.forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; s.appendChild(o); }); s.onchange = () => f(s.value); bar.appendChild(s); return s; };
+  const sel = selOf(__anim.modes().map(m => [m, m]), (v) => { __anim.player.playing = true; __anim.setMode(v); });
+  const kind = selOf(__anim.KINDS.map((k, i) => [i, k.toLowerCase()]), (v) => { __anim.player.kind = +v; fillSwings(); });
+  const swing = selOf([], (v) => { __anim.player.swing = +v; });
+  function fillSwings() { swing.innerHTML = ''; [['-1', 'combo']].concat(Array.from({ length: __anim.swingCount(__anim.player.kind) }, (_, i) => [String(i), 'swing ' + (i + 1)])).forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; swing.appendChild(o); }); swing.value = String(__anim.player.swing); }
+  mk('Pause', b => { __anim.player.playing = !__anim.player.playing; b.textContent = __anim.player.playing ? 'Pause' : 'Play'; });
+  const q = new URLSearchParams(location.search);
+  if (q.get('kind')) { __anim.player.kind = +q.get('kind'); kind.value = q.get('kind'); }
+  if (q.get('swing')) __anim.player.swing = +q.get('swing');
+  fillSwings();
+  if (q.get('anim')) { sel.value = q.get('anim'); __anim.setMode(q.get('anim')); }
+})();
+</script>
+<script>
+if (window.__VIEWER) (function(){
+  document.body.classList.add('viewer');
+  const bar = document.getElementById('bar'); bar.innerHTML = '';
+  const NAMES = { gaia:'Dragoness', demon:'Infernal Fiend', angel:'Seraph', jester:'Harlequin' };
+  const row = (label) => { const g = document.createElement('div'); g.className = 'grp'; const s = document.createElement('span'); s.textContent = label; g.appendChild(s); bar.appendChild(g); return g; };
+  const mk = (g, label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => fn(b); g.appendChild(b); return b; };
+  const gv = row('Helper'), gm = row('Motion'), gw = row('Weapon'), gf = row('Flourish'), gc = row('Camera');
+  let vbtn = {}, mbtns = [];
+  const caps = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const pick = (b) => { mbtns.forEach(x => x.classList.remove('on')); b.classList.add('on'); };
+  [['Idle','idle'],['Walk','walk'],['Run','run'],['Jump','jump'],['Turn','turn'],['Hold','carry'],['Hold + walk','carrywalk'],['Guard','combat'],['Guard + move','combatwalk'],['Attack combo','attack']].forEach(([l, m]) => {
+    const b = mk(gm, l, () => { window.__anim.player.playing = true; window.__anim.setMode(m); pick(b); }); mbtns.push(b); if (m === 'idle') b.classList.add('on');
+  });
+  const wb = [];
+  [['Sword',1],['Dagger',2],['Axe',3],['Greatsword',4],['Spear',5],['Staff',6],['Bow',7],['Crossbow',8],['Dual blades',9],['Fists',0]].forEach(([l, k]) => {
+    const b = mk(gw, l, () => { window.__anim.player.kind = k; window.__anim.player.swing = -1; wb.forEach(x => x.classList.remove('on')); b.classList.add('on'); }); wb.push(b); if (k === 1) b.classList.add('on');
+  });
+  let fbtns = [];
+  function modes() {
+    fbtns.forEach(b => b.remove()); fbtns = [];
+    const fl = ((window.__MOTION && window.__MOTION.variants[current]) || {}).flourish || [];
+    fl.forEach((f, i) => { const b = mk(gf, caps(f.name), () => { window.__anim.player.playing = true; window.__anim.setMode('f' + i); pick(b); }); fbtns.push(b); mbtns.push(b); });
+  }
+  Object.keys(NAMES).forEach(v => { vbtn[v] = mk(gv, NAMES[v], () => { window.__studio.setVariant(v); window.__anim.setMode('idle'); window.__anim.player.playing = true; Object.values(vbtn).forEach(x => x.classList.remove('on')); vbtn[v].classList.add('on'); modes(); }); });
+  [['Front', 3.14, 0.1], ['3/4', 2.6, 0.12], ['Side', Math.PI/2, 0.05], ['Back', 0.1, 0.1]].forEach(([n, y, p]) => mk(gc, n, () => { window.__orbit = false; cam.yaw = y; cam.pitch = p; }));
+  mk(gc, 'Orbit', b => { window.__orbit = !window.__orbit; b.classList.toggle('on', window.__orbit); });
+  mk(gc, 'Face', () => { cam.dist = 40; cam.ty = 3; }); mk(gc, 'Full body', () => { cam.dist = 112; cam.ty = -6; });
+  mk(gc, 'Pause', b => { window.__anim.player.playing = !window.__anim.player.playing; b.textContent = window.__anim.player.playing ? 'Pause' : 'Play'; });
+  document.getElementById('hint').textContent = 'drag = orbit · wheel = zoom · right-drag = pan';
+  document.getElementById('hint').style.display = 'block';
+  cam.yaw = 2.7; cam.pitch = 0.1; cam.dist = 112; cam.ty = -6; window.__orbit = true;
+  vbtn.gaia.classList.add('on'); modes();
+  window.dispatchEvent(new Event('resize')); setTimeout(() => window.dispatchEvent(new Event('resize')), 60);   // the side panel is gone: re-measure the canvas
+})();
+</script>
+</body>
+</html>

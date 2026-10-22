@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="blighted_helper"
+version="1.0.0"
+displayName="Blighted Helper"
+description='''Emily - The personal AI companion for Blighted Dreams. Voice in/out, local or cloud LLM brain, companion combat and equipment.'''
+authors="Blighted Dreams Team"
+
+[[dependencies.blighted_helper]]
+modId="neoforge"
+type="required"
+versionRange="[21.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.blighted_helper]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.blighted_helper]]
+modId="geckolib"
+type="required"
+versionRange="[4.0,)"
+ordering="AFTER"
+side="BOTH"

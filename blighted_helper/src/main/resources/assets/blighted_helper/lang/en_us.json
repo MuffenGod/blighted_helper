@@ -1,0 +1,17 @@
+{
+  "item.blighted_helper.dream_charm": "Dream Charm",
+  "entity.blighted_helper.helper": "Companion",
+  "message.blighted_helper.helper_summoned": "%s steps out of the dream.",
+  "message.blighted_helper.helper_recalled": "%s hurries to your side.",
+  "message.blighted_helper.helper_failed": "The charm fizzles. Something went wrong.",
+  "message.blighted_helper.helper_downed": "%s kneels down. She will get back up.",
+  "message.blighted_helper.helper_stance.follow": "%s follows you.",
+  "message.blighted_helper.helper_stance.stay": "%s holds her position.",
+  "message.blighted_helper.helper_stance.aggressive": "%s will attack any monster nearby.",
+  "message.blighted_helper.helper_healed": "%s was treated and recovered %s HP.",
+  "message.blighted_helper.helper_revived": "%s was revived by medical treatment!",
+  "message.blighted_helper.helper_full_health": "%s is already at full health.",
+  "message.blighted_helper.helper_burger_saved": "%s was saved from falling by the Burger Cat!",
+  "message.blighted_helper.helper_zenith_revive": "%s was resurrected by Made In Heaven's Zenith Revive!",
+  "itemGroup.blighted_helper": "Blighted Helper"
+}

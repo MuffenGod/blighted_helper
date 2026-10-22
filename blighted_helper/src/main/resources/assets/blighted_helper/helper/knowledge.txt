@@ -1,0 +1,22 @@
+THE BLIGHTED REALM
+Blighted Dreams is a dark fantasy action-RPG modpack. Tier 1 to 5 rogue dungeons, Draugr crypts, and cataclysmic abominations known as the Seven Sins infest the world. Gather gear, conquer dungeons, master mechanics, and defeat Sin bosses.
+
+COMBAT & ARTIFACTS
+- Apotheosis: RPG affixes and socketable gems. Gem cutting tables craft gems; salvaging tables yield gem dust; reforging tables re-roll affixes.
+- Combat & Curios: Fluid combo attacks and weapon skills. Curios grant passive defenses, reach, and elemental wards. The Ring of Sins is a perilous covenant relic.
+
+THE SEVEN SINS (BOSSES)
+Cataclysm bosses rule the realm:
+- The Sin of Sloth (Netherite Monstrosity): Colossal trial. Resistant to blunt attacks; dodge telegraphed slams.
+- The Sin of Lust (Scylla): Terror of the sunken ocean abyss.
+- The Sin of Wrath (Ignis): Flaming blade master in the Nether.
+Prepare before challenging any Sin: high-tier affixes, buffs, and first-aid supplies are mandatory.
+
+SURVIVAL & ENVIRONMENT
+- Temperature: Cold causes freezing; heat causes hyperthermia. Campfires, wool thermals, and coats regulate temperature. The Nether requires Cooling II; the End requires Heating III.
+- First Aid: Limbs take separate damage. Bleeding needs bandages or medkits; fractures need splints; morphine numbs pain.
+- Food: Nourishment maintains stamina. Rotten food causes hunger sickness.
+
+TECHNOLOGY
+- Create: Kinetic rotation, water wheels, presses, and drills form the first tier of industry.
+- Advanced Tech: Modern machinery and storage unlock after kinetic foundations and conquering early bosses.

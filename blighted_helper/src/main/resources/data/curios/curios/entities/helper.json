@@ -1,0 +1,19 @@
+{
+  "entities": [
+    "blighted_helper:helper"
+  ],
+  "slots": [
+    "head",
+    "necklace",
+    "back",
+    "body",
+    "bracelet",
+    "hands",
+    "ring",
+    "ring",
+    "belt",
+    "feet",
+    "charm",
+    "curio"
+  ]
+}

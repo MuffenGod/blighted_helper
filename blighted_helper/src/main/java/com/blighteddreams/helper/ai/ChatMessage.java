@@ -1,0 +1,23 @@
+package com.blighteddreams.helper.ai;
+
+import java.util.Objects;
+
+/** One message of a chat: role is "system", "user" or "assistant". */
+public record ChatMessage(String role, String content) {
+    public ChatMessage {
+        Objects.requireNonNull(role, "role");
+        Objects.requireNonNull(content, "content");
+    }
+
+    public static ChatMessage system(String content) {
+        return new ChatMessage("system", content);
+    }
+
+    public static ChatMessage user(String content) {
+        return new ChatMessage("user", content);
+    }
+
+    public static ChatMessage assistant(String content) {
+        return new ChatMessage("assistant", content);
+    }
+}

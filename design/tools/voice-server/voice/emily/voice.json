@@ -1,0 +1,88 @@
+{
+  "name": "emily",
+  "language": "English",
+  "default_mood": "calm",
+  "design": {
+    "note": "Emily Fish Audio Multi-Mood Upgrade (2026-10-19). Uses authentic Fish Audio 44.1kHz studio takes resampled cleanly to 24kHz. Each in-game mood has its own dedicated reference take with matching emotion and acting delivery.",
+    "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+  },
+  "postfx": {
+    "note": "Clean broadcast presence curve for the same Fish Audio studio takes. Subtle low-mud cut, speech presence, a small de-harsh notch, and air. The in-game DSP adds adaptive space on top; this keeps the dry voice crisp before it reaches the world.",
+    "filters": [
+      {
+        "type": "lowshelf",
+        "freq": 180,
+        "gain_db": -1.8
+      },
+      {
+        "type": "peak",
+        "freq": 2900,
+        "gain_db": 1.8,
+        "q": 1.05
+      },
+      {
+        "type": "peak",
+        "freq": 4700,
+        "gain_db": -1.1,
+        "q": 1.7
+      },
+      {
+        "type": "highshelf",
+        "freq": 7800,
+        "gain_db": 1.2
+      }
+    ]
+  },
+  "moods": {
+    "calm": {
+      "file": "fish_calm.wav",
+      "text": "You know, looking at it now with all the lanterns lit up... we actually built something pretty amazing here.",
+      "style": "Content, relaxed, warm smile."
+    },
+    "cheerful": {
+      "file": "fish_cheerful.wav",
+      "text": "Hey, good job today. That was actually kind of fun.",
+      "style": "Warm, lightly upbeat, cheerful."
+    },
+    "worried": {
+      "file": "fish_worried.wav",
+      "text": "Look out, your armor is practically shattered! Fall back before you get yourself killed!",
+      "style": "Urgent, concerned, protective."
+    },
+    "battle": {
+      "file": "fish_battle.wav",
+      "text": "Oh good, a fight. Finally! I was starting to get bored of being right all the time.",
+      "style": "Cocky, thrilled, ready for combat."
+    },
+    "whisper": {
+      "file": "fish_whisper.wav",
+      "text": "Shh, don't move a single muscle. The Warden is sniffing the air right above us... just crouch and follow my footsteps.",
+      "style": "Intimate, quiet, stealth whisper."
+    },
+    "smug": {
+      "file": "fish_smug.wav",
+      "text": "You do realize I'm carrying this whole adventure, right?",
+      "style": "Playfully smug, gloating playfully."
+    },
+    "tease": {
+      "file": "fish_tease.wav",
+      "text": "You know, for someone who claims to know the way, you sure take a lot of random left turns. Are we actually heading towards the village, or are you just wandering around hoping we find something cool?",
+      "style": "Teasing, mildly exasperated, amused."
+    },
+    "flirt": {
+      "file": "fish_flirt.wav",
+      "text": "Mmm, keep staring like that and I might start thinking you actually like me. Which, obviously, you do.",
+      "style": "Smooth, flirtatious, a little smug."
+    },
+    "mock": {
+      "file": "fish_mock.wav",
+      "text": "Oh yeah, sure, blame it on the lag. The skeleton shot you from two feet away. Textbook skill issue.",
+      "style": "Dry, sarcastic, playfully mocking."
+    },
+    "sincere": {
+      "file": "fish_sincere.wav",
+      "text": "Hey, seriously though, thanks for having my back back there. It gets pretty lonely wandering around these biomes alone, so it's cool having you around. Even if you do make questionable decisions constantly.",
+      "style": "Warm, genuine, sincere companion loyalty."
+    }
+  }
+}
